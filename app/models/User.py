@@ -5,6 +5,7 @@ from sqlalchemy import func
 from app.models.Base import Base, IdMixin
 from sqlalchemy.orm import Mapped, mapped_column
 
+
 class User(Base, IdMixin):
     __tablename__ = "users"
 
@@ -15,6 +16,5 @@ class User(Base, IdMixin):
 
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=func.now(),
-        onupdate=func.now()
+        server_default=func.now(), onupdate=func.now()
     )

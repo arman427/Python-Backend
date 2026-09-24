@@ -1,13 +1,14 @@
-import asyncio
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.db.db import init_db
 
-app = FastAPI()
 
-async def main():
-    init_db()
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await init_db()
+    yield
 
-if __name__ == "__main__":
-    asyncio.run(main())
+
+app = FastAPI(lifespan=lifespan)
