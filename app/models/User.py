@@ -1,13 +1,20 @@
 from datetime import datetime
+from app.models.base import Base
+import uuid
 
-from sqlalchemy import DateTime, String, Text, func
-
-from app.models.Base import Base, IdMixin
+from sqlalchemy import DateTime, String, Text, func, text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 
-class User(Base, IdMixin):
+class UserORM(Base):
     __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
 
     name: Mapped[str] = mapped_column(
         String(100), default="Гость", server_default="Гость"
