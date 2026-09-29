@@ -1,32 +1,52 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from pwdlib import PasswordHash
 
-SECRET_KEY = "SUPER_SECRET_KEY_CHANGE_ME"  # потом вынесем в .env / config
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+from app.core.config import get_settings
+
+settings = get_settings()
+
+
+def decode_token(token: str) -> dict | None:
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        return payload
+    except jwt.InvalidTokenError:
+        return None
 
 
 def create_token(data: dict, expires_delta: timedelta) -> str:
     to_encode = data.copy()
     deadline = datetime.now(timezone.utc) + expires_delta
     to_encode.update({"exp": deadline})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: uuid.UUID) -> str:
     return create_token(
         data={"sub": str(user_id), "type": "access"},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
 
-def create_refresh_token(user_id: int) -> str:
+def create_refresh_token(user_id: uuid.UUID) -> str:
     return create_token(
         data={"sub": str(user_id), "type": "refresh"},
-        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+        expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
 
 
 # --- Password
+password_hash = PasswordHash.recommended()
+
+
+def get_password_hash(password: str) -> str:
+    return password_hash.hash(password)
+
+
+def verify_password(password: str, hash: str) -> bool:
+    return password_hash.verify(password, hash)
