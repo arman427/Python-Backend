@@ -10,15 +10,14 @@ from app.core.security import (
     verify_password,
 )
 from app.repositories.User import UserRepository
-from app.schemas.user import TokenResponse, UserRegister
-from app.models import UserORM
+from app.schemas.user import TokenResponse, UserRegister, UserResponse
 
 
 class AuthService:
     def __init__(self, user_repo: UserRepository) -> None:
         self.user_repo = user_repo
 
-    async def register(self, data: UserRegister) -> UserORM:
+    async def register(self, data: UserRegister) -> None:
         user = await self.user_repo.get_by_email(data.email)
 
         if user:
@@ -29,9 +28,8 @@ class AuthService:
         hash_pass = get_password_hash(data.password)
 
         user = await self.user_repo.create(data.email, hash_pass, data.name)
-        return user
 
-    async def login(self, email: str, password: str) -> TokenResponse:
+    async def login(self, email: str, password: str) -> UserResponse:
         user = await self.user_repo.get_by_email(email)
 
         if not user or not verify_password(password, user.hashed_password):
@@ -45,10 +43,15 @@ class AuthService:
 
         await self.user_repo.update_refresh_token(user.id, refresh_token)
 
-        return TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="bearer",
+        return UserResponse(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            token=TokenResponse(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                token_type="bearer",
+            ),
         )
 
     async def refresh_tokens(self, refresh_token: str) -> TokenResponse:

@@ -1,10 +1,11 @@
-from datetime import datetime
-from app.models.base import Base
 import uuid
+from datetime import datetime
 
 from sqlalchemy import DateTime, String, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.models.base import Base
 
 
 class UserORM(Base):

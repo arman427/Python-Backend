@@ -2,9 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.db.db import init_db
-
 from app.api.auth import router as user_router
+from app.db.db import init_db
 
 
 @asynccontextmanager
