@@ -9,8 +9,14 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
-from app.repositories.User import UserRepository
-from app.schemas.user import TokenResponse, UserRegister, UserResponse
+from app.models.enum import Role
+from app.repositories.user import UserRepository
+from app.schemas.user import (
+    TokenResponse,
+    UserLoginResponse,
+    UserMeResponse,
+    UserRegister,
+)
 
 
 class AuthService:
@@ -18,6 +24,11 @@ class AuthService:
         self.user_repo = user_repo
 
     async def register(self, data: UserRegister) -> None:
+        if data.role == Role.ADMIN:
+            raise HTTPException(
+                status_code=403,
+                detail="Регистрация администратора через публичный API запрещена",
+            )
         user = await self.user_repo.get_by_email(data.email)
 
         if user:
@@ -27,9 +38,14 @@ class AuthService:
 
         hash_pass = get_password_hash(data.password)
 
-        user = await self.user_repo.create(data.email, hash_pass, data.name)
+        await self.user_repo.create(
+            email=data.email,
+            hashed_password=hash_pass,
+            full_name=data.full_name,
+            role=data.role,
+        )
 
-    async def login(self, email: str, password: str) -> UserResponse:
+    async def login(self, email: str, password: str) -> UserLoginResponse:
         user = await self.user_repo.get_by_email(email)
 
         if not user or not verify_password(password, user.hashed_password):
@@ -43,15 +59,15 @@ class AuthService:
 
         await self.user_repo.update_refresh_token(user.id, refresh_token)
 
-        return UserResponse(
+        return UserLoginResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
             id=user.id,
-            name=user.name,
+            full_name=user.full_name,
             email=user.email,
-            token=TokenResponse(
-                access_token=access_token,
-                refresh_token=refresh_token,
-                token_type="bearer",
-            ),
+            role=user.role,
+            avatar_url=user.avatar_url,
         )
 
     async def refresh_tokens(self, refresh_token: str) -> TokenResponse:
@@ -69,7 +85,7 @@ class AuthService:
         except (ValueError, TypeError, AttributeError):
             raise HTTPException(status_code=401, detail="Невалидный формат ID")
 
-        user = await self.user_repo.get_by_id(user_id=user_id)
+        user = await self.user_repo.get_by_id(user_id)
 
         if not user:
             raise HTTPException(status_code=401, detail="Пользователь не найден")

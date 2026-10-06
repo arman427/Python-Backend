@@ -1,13 +1,21 @@
-.PHONY: db-up db-down db-logs run
+.PHONY: up down logs test run migrate seed
+up:
+	docker compose up --build
 
-db-up:
-	docker compose up -d
-
-db-down:
+down:
 	docker compose down
 
-db-logs:
-	docker compose logs -f db
+logs:
+	docker compose logs -f api
 
 run:
 	uvicorn app.main:app --reload
+
+migrate:
+	alembic upgrade head
+
+seed:
+	python -m app.seed
+
+test:
+	pytest -q
