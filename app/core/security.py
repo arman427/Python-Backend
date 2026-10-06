@@ -40,7 +40,7 @@ def create_refresh_token(user_id: uuid.UUID) -> str:
     )
 
 
-# --- Password
+
 password_hash = PasswordHash.recommended()
 
 

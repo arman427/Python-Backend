@@ -1,21 +1,6 @@
-# Виртуальное окружение
+.env
 .venv/
-venv/
-ENV/
-
-# Байткод и кэш Python
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Переменные окружения с секретами
-.env
-.env.local
-
-# Базы данных / логи (если появятся локально)
-*.sqlite3
-*.log
-
-# IDE
-.vscode/
-.idea/
+.pytest_cache/
+.coverage
